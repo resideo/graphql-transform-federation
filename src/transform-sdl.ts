@@ -1,5 +1,7 @@
 import {
   FieldDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  InterfaceTypeExtensionNode,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
   parse,
@@ -81,7 +83,7 @@ export function addFederationAnnotations<TContext>(
           const { keyFields, extend } = federationConfig[currentObjectName];
 
           const newDirectives = keyFields
-            ? keyFields.map(keyField =>
+            ? keyFields.map((keyField) =>
                 createDirectiveWithFields('key', keyField),
               )
             : [];
@@ -92,7 +94,33 @@ export function addFederationAnnotations<TContext>(
             kind: extend ? 'ObjectTypeExtension' : node.kind,
           };
         }
-        return undefined;
+      },
+      leave() {
+        currentObjectName = undefined;
+      },
+    },
+    InterfaceTypeDefinition: {
+      enter(
+        node: InterfaceTypeDefinitionNode,
+      ): InterfaceTypeDefinitionNode | InterfaceTypeExtensionNode | undefined {
+        currentObjectName = node.name.value;
+        if (objectTypesTodo.has(currentObjectName)) {
+          objectTypesTodo.delete(currentObjectName);
+
+          const { keyFields, extend } = federationConfig[currentObjectName];
+
+          const newDirectives = keyFields
+            ? keyFields.map((keyField) =>
+                createDirectiveWithFields('key', keyField),
+              )
+            : [];
+
+          return {
+            ...node,
+            directives: [...(node.directives || []), ...newDirectives],
+            kind: extend ? 'InterfaceTypeExtension' : node.kind,
+          };
+        }
       },
       leave() {
         currentObjectName = undefined;
@@ -155,7 +183,7 @@ export function addFederationAnnotations<TContext>(
       `Could not add directive to these fields: ${Object.entries(fieldTypesTodo)
         .flatMap(([objectName, fieldsConfig]) => {
           return Object.keys(fieldsConfig).map(
-            externalField => `${objectName}.${externalField}`,
+            (externalField) => `${objectName}.${externalField}`,
           );
         })
         .join(', ')}`,
