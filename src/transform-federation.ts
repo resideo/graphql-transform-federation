@@ -61,9 +61,9 @@ export function transformSchemaFederation<TContext>(
       .filter(([, { keyFields }]) => keyFields && keyFields.length)
       .map(([objectName]) => {
         const type = schemaWithQueryType.getType(objectName);
-        if (!isObjectType(type) || !isInterfaceType(type)) {
+        if (!isObjectType(type) && !isInterfaceType(type)) {
           throw new Error(
-            `Type "${objectName}" is not an object type and can't have a key directive`,
+            `Type "${objectName}" is not an object or interface type, and can't have a key directive`,
           );
         }
         return [objectName, type];
@@ -100,7 +100,9 @@ export function transformSchemaFederation<TContext>(
       if (isUnionType(type) && type.name === EntityType.name) {
         return new GraphQLUnionType({
           ...EntityType.toConfig(),
-          types: Object.values(entityTypes),
+          types: Object.values(entityTypes).filter(
+            (t): t is GraphQLObjectType => isObjectType(t),
+          ),
         });
       }
       return undefined;
