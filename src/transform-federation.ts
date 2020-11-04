@@ -4,6 +4,7 @@ import {
   GraphQLSchema,
   GraphQLUnionType,
   isObjectType,
+  isInterfaceType,
   isUnionType,
   printSchema,
 } from 'graphql';
@@ -60,7 +61,7 @@ export function transformSchemaFederation<TContext>(
       .filter(([, { keyFields }]) => keyFields && keyFields.length)
       .map(([objectName]) => {
         const type = schemaWithQueryType.getType(objectName);
-        if (!isObjectType(type)) {
+        if (!isObjectType(type) || !isInterfaceType(type)) {
           throw new Error(
             `Type "${objectName}" is not an object type and can't have a key directive`,
           );
