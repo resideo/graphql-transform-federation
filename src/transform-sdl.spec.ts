@@ -32,6 +32,11 @@ describe('transform-sdl', () => {
           Product: {
             keyFields: ['id'],
             extend: true,
+            fields: {
+              id: {
+                external: true
+              }
+            },
           },
         },
       ),
