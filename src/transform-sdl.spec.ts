@@ -34,15 +34,15 @@ describe('transform-sdl', () => {
             extend: true,
             fields: {
               id: {
-                external: true
-              }
+                external: true,
+              },
             },
           },
         },
       ),
     ).toEqual(dedent`
       extend interface Product @keep @key(fields: "id") {
-        id: Int
+        id: Int @external
       }\n`);
   });
 
